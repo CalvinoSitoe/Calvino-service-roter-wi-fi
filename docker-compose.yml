@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ROUTER_BASE_URL=${ROUTER_BASE_URL}
+      - ROUTER_USERNAME=${ROUTER_USERNAME}
+      - ROUTER_PASSWORD=${ROUTER_PASSWORD}
+    volumes:
+      - ./data:/app/data

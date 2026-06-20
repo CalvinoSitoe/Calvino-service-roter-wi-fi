@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Calvino Service - Router Wi-Fi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      .hidden { display: none; }
+      .box { max-width: 600px; }
+      input { width: 100%; padding: 8px; margin: 6px 0; }
+      button { padding: 8px 12px; }
+      pre { background:#f4f4f4;padding:10px }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>Calvino Router Wi‑Fi</h1>
+      <div id="login">
+        <h3>Login</h3>
+        <input id="username" placeholder="username" />
+        <input id="password" placeholder="password" type="password" />
+        <button id="btnLogin">Login</button>
+      </div>
+
+      <div id="panel" class="hidden">
+        <button id="btnLogout">Logout</button>
+        <h3>Status</h3>
+        <button id="btnStatus">Get Status</button>
+        <pre id="statusOut"></pre>
+
+        <h3>Commands</h3>
+        <button data-action="restart_wifi" class="cmd">Restart Wi‑Fi</button>
+        <button data-action="reboot_router" class="cmd">Reboot Router</button>
+        <button data-action="list_clients" class="cmd">List Clients</button>
+
+        <h4>Set SSID</h4>
+        <input id="ssid" placeholder="new ssid" />
+        <button id="btnSetSsid">Set SSID</button>
+
+        <h4>Set Password</h4>
+        <input id="pwd" placeholder="new wifi password" />
+        <button id="btnSetPwd">Set Password</button>
+
+        <pre id="cmdOut"></pre>
+      </div>
+    </div>
+
+    <script>
+      const loginEl = document.getElementById('login');
+      const panelEl = document.getElementById('panel');
+      const statusOut = document.getElementById('statusOut');
+      const cmdOut = document.getElementById('cmdOut');
+
+      document.getElementById('btnLogin').addEventListener('click', async () => {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const res = await fetch('/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username, password }) });
+        if (res.ok) { loginEl.classList.add('hidden'); panelEl.classList.remove('hidden'); }
+        else alert('login failed');
+      });
+
+      document.getElementById('btnLogout').addEventListener('click', async () => {
+        await fetch('/auth/logout', { method: 'POST' });
+        panelEl.classList.add('hidden'); loginEl.classList.remove('hidden');
+      });
+
+      document.getElementById('btnStatus').addEventListener('click', async () => {
+        const res = await fetch('/api/wifi/status');
+        const data = await res.json();
+        statusOut.textContent = JSON.stringify(data, null, 2);
+      });
+
+      document.querySelectorAll('.cmd').forEach(b => b.addEventListener('click', async (e) => {
+        const action = e.target.getAttribute('data-action');
+        const res = await fetch('/api/wifi/command', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action }) });
+        const data = await res.json();
+        cmdOut.textContent = JSON.stringify(data, null, 2);
+      }));
+
+      document.getElementById('btnSetSsid').addEventListener('click', async () => {
+        const ssid = document.getElementById('ssid').value;
+        const res = await fetch('/api/wifi/command', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'set_ssid', data: { ssid } }) });
+        cmdOut.textContent = JSON.stringify(await res.json(), null, 2);
+      });
+
+      document.getElementById('btnSetPwd').addEventListener('click', async () => {
+        const password = document.getElementById('pwd').value;
+        const res = await fetch('/api/wifi/command', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'set_password', data: { password } }) });
+        cmdOut.textContent = JSON.stringify(await res.json(), null, 2);
+      });
+    </script>
+  </body>
+</html>
